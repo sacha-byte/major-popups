@@ -25,6 +25,7 @@
 	var shown = false;
 	var lastFocused = null;
 	var overlay = null;
+	var preloaded = {}; // config.id -> { holder, loading, loaded }
 
 	function getCookie( name ) {
 		var match = document.cookie.match( '(^|; )' + name + '=([^;]*)' );
@@ -40,6 +41,8 @@
 		if ( config.cookieEnabled && getCookie( config.cookieName ) ) {
 			return; // déjà fermé récemment, on n'arme même pas le déclencheur
 		}
+
+		preload( config );
 
 		if ( config.triggerType === 'scroll' ) {
 			var onScroll = function () {
@@ -58,14 +61,51 @@
 		}
 	}
 
+	/**
+	 * Charge le contenu du popup en arrière-plan, hors écran, dès l'armement du
+	 * déclencheur — pas seulement à l'affichage. Le délai/scroll d'attente avant
+	 * déclenchement (1 à 20s selon le popup) est un temps mort qu'on utilise pour
+	 * précharger le formulaire Lead Manager ; `show()` réutilise ce conteneur au
+	 * lieu d'en créer un nouveau, pour une ouverture instantanée le cas échéant.
+	 */
+	function preload( config ) {
+		var template = document.getElementById( 'mpp-content-' + config.id );
+		if ( ! template ) {
+			return;
+		}
+
+		var holder = document.createElement( 'div' );
+		holder.style.position = 'absolute';
+		holder.style.left = '-9999px';
+		holder.style.top = '0';
+		document.body.appendChild( holder );
+
+		var loading = document.createElement( 'div' );
+		loading.className = 'mpp-loading';
+		loading.textContent = 'Chargement du formulaire…';
+		holder.appendChild( loading );
+
+		appendEmbedContent( holder, template.content );
+
+		var state = { holder: holder, loading: loading, loaded: false };
+		preloaded[ config.id ] = state;
+
+		watchRealContent( holder, function () {
+			state.loaded = true;
+			if ( state.loading.parentNode ) {
+				state.loading.remove();
+			}
+		} );
+	}
+
 	function show( config ) {
 		if ( shown ) {
 			return; // un popup déjà affiché sur cette page vue
 		}
 		shown = true;
 
-		var template = document.getElementById( 'mpp-content-' + config.id );
-		if ( ! template ) {
+		var state = preloaded[ config.id ];
+		if ( ! state ) {
 			return;
 		}
 
@@ -87,16 +127,24 @@
 			close( config );
 		} );
 
-		var body = document.createElement( 'div' );
+		var body = state.holder;
+		body.style.position = '';
+		body.style.left = '';
+		body.style.top = '';
 		body.className = 'mpp-card-body';
 
-		var loading = document.createElement( 'div' );
-		loading.className = 'mpp-loading';
-		loading.textContent = 'Chargement du formulaire…';
-		body.appendChild( loading );
-
-		appendEmbedContent( body, template.content );
-		watchEmbedLoaded( body, loading );
+		if ( ! state.loaded ) {
+			// Filet de sécurité : le préchargement n'a pas eu le temps de finir avant
+			// le déclenchement (délai/scroll trop court) — on abandonne l'indicateur
+			// au bout de 8s à partir de l'AFFICHAGE (pas de l'armement, qui peut être
+			// bien antérieur), pour ne jamais laisser un spinner tourner indéfiniment
+			// sous les yeux du visiteur.
+			setTimeout( function () {
+				if ( ! state.loaded && state.loading.parentNode ) {
+					state.loading.remove();
+				}
+			}, 8000 );
+		}
 
 		var dismiss = document.createElement( 'button' );
 		dismiss.className = 'mpp-dismiss';
@@ -150,7 +198,13 @@
 		}
 	}
 
-	/** Clone le fragment du <template> en recréant les <script> pour qu'ils s'exécutent. */
+	/**
+	 * Clone le fragment du <template> en recréant les <script> pour qu'ils s'exécutent
+	 * (une insertion via innerHTML ne les exécuterait pas). Ajoute automatiquement
+	 * data-layout="compact" sur le script d'embed Lead Manager : un popup veut
+	 * toujours la mise en page compacte (Email/Téléphone/Région sur une ligne), pas
+	 * besoin que la personne qui colle le code d'embed s'en souvienne.
+	 */
 	function appendEmbedContent( container, fragment ) {
 		fragment.childNodes.forEach( function ( node ) {
 			if ( node.nodeName === 'SCRIPT' ) {
@@ -158,6 +212,7 @@
 				Array.prototype.forEach.call( node.attributes, function ( attr ) {
 					script.setAttribute( attr.name, attr.value );
 				} );
+				script.dataset.layout = 'compact';
 				script.textContent = node.textContent;
 				container.appendChild( script );
 			} else {
@@ -171,24 +226,11 @@
 	 * (chargement réseau) — le conteneur + Shadow DOM qu'il crée n'existent donc pas
 	 * encore juste après l'insertion du <script>. On observe l'arrivée de ce conteneur,
 	 * puis le premier changement dans son Shadow Root (fragment chargé, ou message
-	 * d'erreur), pour masquer notre indicateur de chargement au bon moment plutôt
-	 * qu'après un délai arbitraire.
+	 * d'erreur), et on appelle `onLoaded` à ce moment précis — pas de délai arbitraire
+	 * ici, la gestion du "j'abandonne d'attendre" se fait au moment de l'affichage
+	 * (cf. show()), puisque le préchargement peut démarrer bien avant.
 	 */
-	function watchEmbedLoaded( body, loading ) {
-		var hidden = false;
-		var fallback = setTimeout( hide, 8000 );
-
-		function hide() {
-			if ( hidden ) {
-				return;
-			}
-			hidden = true;
-			clearTimeout( fallback );
-			if ( loading.parentNode ) {
-				loading.remove();
-			}
-		}
-
+	function watchRealContent( body, onLoaded ) {
 		var containerObserver = new MutationObserver( function () {
 			var container = findShadowHost( body );
 			if ( ! container ) {
@@ -198,7 +240,7 @@
 
 			var shadowObserver = new MutationObserver( function () {
 				shadowObserver.disconnect();
-				hide();
+				onLoaded();
 			} );
 			shadowObserver.observe( container.shadowRoot, { childList: true, subtree: true } );
 		} );

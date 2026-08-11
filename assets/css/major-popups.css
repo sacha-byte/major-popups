@@ -27,7 +27,10 @@
 .mpp-card {
 	position: relative;
 	width: 100%;
-	max-width: 430px;
+	/* Aligné sur le max-width de la mise en page compacte Lead Manager (640px,
+	   cf. .layout-compact.page dans _formulaire_default_style.html) — un popup
+	   plus étroit forcerait le formulaire à se resserrer plus qu'il n'a besoin. */
+	max-width: 640px;
 	margin: auto; /* centre verticalement même quand l'overlay scrolle */
 }
 
