@@ -89,7 +89,14 @@
 
 		var body = document.createElement( 'div' );
 		body.className = 'mpp-card-body';
+
+		var loading = document.createElement( 'div' );
+		loading.className = 'mpp-loading';
+		loading.textContent = 'Chargement du formulaire…';
+		body.appendChild( loading );
+
 		appendEmbedContent( body, template.content );
+		watchEmbedLoaded( body, loading );
 
 		var dismiss = document.createElement( 'button' );
 		dismiss.className = 'mpp-dismiss';
@@ -157,6 +164,54 @@
 				container.appendChild( node.cloneNode( true ) );
 			}
 		} );
+	}
+
+	/**
+	 * Le code d'embed Lead Manager (script src externe) s'exécute de façon asynchrone
+	 * (chargement réseau) — le conteneur + Shadow DOM qu'il crée n'existent donc pas
+	 * encore juste après l'insertion du <script>. On observe l'arrivée de ce conteneur,
+	 * puis le premier changement dans son Shadow Root (fragment chargé, ou message
+	 * d'erreur), pour masquer notre indicateur de chargement au bon moment plutôt
+	 * qu'après un délai arbitraire.
+	 */
+	function watchEmbedLoaded( body, loading ) {
+		var hidden = false;
+		var fallback = setTimeout( hide, 8000 );
+
+		function hide() {
+			if ( hidden ) {
+				return;
+			}
+			hidden = true;
+			clearTimeout( fallback );
+			if ( loading.parentNode ) {
+				loading.remove();
+			}
+		}
+
+		var containerObserver = new MutationObserver( function () {
+			var container = findShadowHost( body );
+			if ( ! container ) {
+				return;
+			}
+			containerObserver.disconnect();
+
+			var shadowObserver = new MutationObserver( function () {
+				shadowObserver.disconnect();
+				hide();
+			} );
+			shadowObserver.observe( container.shadowRoot, { childList: true, subtree: true } );
+		} );
+		containerObserver.observe( body, { childList: true } );
+	}
+
+	function findShadowHost( body ) {
+		for ( var i = 0; i < body.children.length; i++ ) {
+			if ( body.children[ i ].shadowRoot ) {
+				return body.children[ i ];
+			}
+		}
+		return null;
 	}
 
 	function close( config ) {

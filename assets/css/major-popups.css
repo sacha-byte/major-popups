@@ -1,6 +1,12 @@
-/* Coquille du popup (overlay/carte/fermeture) — la mise en forme interne du formulaire vient du
-   CSS scopé Lead Manager (.lm[data-media=...]). Tokens repris du handoff design Lead Manager
-   (Refonte Lead Manager 2empower.zip) : accent Major Prépa #1B3B8F, rayon carte 16px. */
+/* Coquille du popup : uniquement overlay + positionnement + bouton de fermeture.
+ * Le formulaire Lead Manager embarqué a déjà sa propre carte (bordure, ombre, filet
+ * d'accent) — la coquille ne doit PAS en dessiner une seconde par-dessus (constaté en
+ * test réel le 2026-08-11 : effet "carte dans la carte", scroll imbriqué, croix mal
+ * positionnée). `!important` sur le bouton de fermeture et le lien de fermeture : le
+ * thème du site applique des styles globaux à tout <button>, y compris au survol
+ * (constaté : fond rouge du thème sur le lien "Non merci") — même leçon que
+ * major-master-v2/CONTEXT.md sur les couleurs de bouton fixées en dur côté thème.
+ */
 
 .mpp-overlay {
 	position: fixed;
@@ -11,6 +17,7 @@
 	align-items: center;
 	justify-content: center;
 	padding: 20px;
+	overflow-y: auto; /* un seul scroll (l'overlay), jamais un scroll imbriqué dans la carte */
 }
 
 .mpp-overlay[hidden] {
@@ -21,67 +28,81 @@
 	position: relative;
 	width: 100%;
 	max-width: 430px;
-	max-height: 90vh;
-	overflow-y: auto;
-	background: #fff;
-	border-radius: 16px;
-	box-shadow: 0 20px 60px rgba(21, 22, 26, .25);
+	margin: auto; /* centre verticalement même quand l'overlay scrolle */
 }
 
-.mpp-card::before {
+.mpp-loading {
+	padding: 60px 24px;
+	text-align: center;
+	color: #8C887F;
+	font-family: system-ui, sans-serif;
+	font-size: 14px;
+}
+
+.mpp-loading::before {
 	content: "";
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	height: 4px;
-	background: #1B3B8F;
-	border-radius: 16px 16px 0 0;
+	display: block;
+	width: 28px;
+	height: 28px;
+	margin: 0 auto 12px;
+	border: 3px solid #DCDAD3;
+	border-top-color: #1B3B8F;
+	border-radius: 50%;
+	animation: mpp-spin .7s linear infinite;
 }
 
-.mpp-card-body {
-	padding: 32px 28px 24px;
+@keyframes mpp-spin {
+	to { transform: rotate(360deg); }
 }
 
 .mpp-close {
 	position: absolute;
-	top: 14px;
-	right: 14px;
+	top: 10px;
+	right: 10px;
+	z-index: 1;
 	width: 32px;
 	height: 32px;
-	border: none;
-	background: transparent;
-	border-radius: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: none !important;
+	background: rgba(255, 255, 255, .92) !important;
+	box-shadow: 0 1px 4px rgba(21, 22, 26, .18);
+	border-radius: 50% !important;
 	cursor: pointer;
-	font-size: 20px;
+	font-size: 18px;
 	line-height: 1;
-	color: #6B6862;
+	color: #6B6862 !important;
+	padding: 0 !important;
 }
 
 .mpp-close:hover,
 .mpp-close:focus-visible {
-	background: #F7F6F3;
-	color: #15161A;
+	background: #fff !important;
+	color: #15161A !important;
 }
 
 .mpp-dismiss {
 	display: block;
 	text-align: center;
-	margin-top: 16px;
+	margin: 12px 16px 16px;
 	font-size: 13px;
-	color: #8C887F;
+	color: #8C887F !important;
 	text-decoration: underline;
 	cursor: pointer;
-	background: none;
-	border: none;
-	width: 100%;
+	background: transparent !important;
+	border: none !important;
+	box-shadow: none !important;
+	width: auto;
+	padding: 4px !important;
 }
 
-.mpp-dismiss:hover {
-	color: #15161A;
+.mpp-dismiss:hover,
+.mpp-dismiss:focus-visible {
+	color: #15161A !important;
+	background: transparent !important;
 }
 
-/* Mobile : feuille basse ancrée en bas, poignée centrée, pleine largeur */
 @media (max-width: 640px) {
 	.mpp-overlay {
 		align-items: flex-end;
@@ -90,27 +111,6 @@
 
 	.mpp-card {
 		max-width: none;
-		border-radius: 16px 16px 0 0;
-		max-height: 85vh;
-	}
-
-	.mpp-card::before {
-		border-radius: 16px 16px 0 0;
-	}
-
-	.mpp-card::after {
-		content: "";
-		position: absolute;
-		top: 10px;
-		left: 50%;
-		transform: translateX(-50%);
-		width: 40px;
-		height: 4px;
-		border-radius: 2px;
-		background: #DCDAD3;
-	}
-
-	.mpp-card-body {
-		padding-top: 28px;
+		margin: 0;
 	}
 }
