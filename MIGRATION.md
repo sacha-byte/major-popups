@@ -1,5 +1,7 @@
 # Migration depuis Popup Maker
 
+**Statut (2026-08-11)** : les 6 popups ci-dessous ont été créés en **brouillon** (inactifs) dans `major-popups` avec les réglages recommandés par défaut — y compris sur les 3 points qui restaient à trancher : #4 en Option A (taxonomie), #5 en ciblage taxonomie Prépa=ECT, #6 restreint à "Articles" (reflète l'anomalie constatée, pas de tagging inventé). À relire dans wp-admin (Popups) et publier un par un après vérification.
+
 Audit effectué le 2026-08-11 sur la copie DevKinsta (`majorprepa.local`). 6 popups actifs en base. Pour chacun, la configuration `major-popups` recommandée à saisir manuellement dans wp-admin (Popups → Ajouter un popup).
 
 ## 1. Popup Sidebar (Popup Maker #170299)
