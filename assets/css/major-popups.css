@@ -1,0 +1,116 @@
+/* Coquille du popup (overlay/carte/fermeture) — la mise en forme interne du formulaire vient du
+   CSS scopé Lead Manager (.lm[data-media=...]). Tokens repris du handoff design Lead Manager
+   (Refonte Lead Manager 2empower.zip) : accent Major Prépa #1B3B8F, rayon carte 16px. */
+
+.mpp-overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(21, 22, 26, .55);
+	z-index: 999999;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 20px;
+}
+
+.mpp-overlay[hidden] {
+	display: none;
+}
+
+.mpp-card {
+	position: relative;
+	width: 100%;
+	max-width: 430px;
+	max-height: 90vh;
+	overflow-y: auto;
+	background: #fff;
+	border-radius: 16px;
+	box-shadow: 0 20px 60px rgba(21, 22, 26, .25);
+}
+
+.mpp-card::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 4px;
+	background: #1B3B8F;
+	border-radius: 16px 16px 0 0;
+}
+
+.mpp-card-body {
+	padding: 32px 28px 24px;
+}
+
+.mpp-close {
+	position: absolute;
+	top: 14px;
+	right: 14px;
+	width: 32px;
+	height: 32px;
+	border: none;
+	background: transparent;
+	border-radius: 8px;
+	cursor: pointer;
+	font-size: 20px;
+	line-height: 1;
+	color: #6B6862;
+}
+
+.mpp-close:hover,
+.mpp-close:focus-visible {
+	background: #F7F6F3;
+	color: #15161A;
+}
+
+.mpp-dismiss {
+	display: block;
+	text-align: center;
+	margin-top: 16px;
+	font-size: 13px;
+	color: #8C887F;
+	text-decoration: underline;
+	cursor: pointer;
+	background: none;
+	border: none;
+	width: 100%;
+}
+
+.mpp-dismiss:hover {
+	color: #15161A;
+}
+
+/* Mobile : feuille basse ancrée en bas, poignée centrée, pleine largeur */
+@media (max-width: 640px) {
+	.mpp-overlay {
+		align-items: flex-end;
+		padding: 0;
+	}
+
+	.mpp-card {
+		max-width: none;
+		border-radius: 16px 16px 0 0;
+		max-height: 85vh;
+	}
+
+	.mpp-card::before {
+		border-radius: 16px 16px 0 0;
+	}
+
+	.mpp-card::after {
+		content: "";
+		position: absolute;
+		top: 10px;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 40px;
+		height: 4px;
+		border-radius: 2px;
+		background: #DCDAD3;
+	}
+
+	.mpp-card-body {
+		padding-top: 28px;
+	}
+}
