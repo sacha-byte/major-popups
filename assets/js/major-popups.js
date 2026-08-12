@@ -87,8 +87,20 @@
 
 		appendEmbedContent( holder, template.content );
 
-		var state = { holder: holder, loading: loading, loaded: false };
+		var state = { holder: holder, loading: loading, loaded: false, card: null };
 		preloaded[ config.id ] = state;
+
+		// Signal envoyé par formulaire.js (composed: true, traverse le Shadow DOM)
+		// au passage étape 1 <-> 2 du formulaire compact — masque la colonne image
+		// à l'étape 2 (cf. major-popups.css .mpp-step-2). `state.card` n'existe pas
+		// encore si le popup se déclenche avant la fin du préchargement ; la classe
+		// est alors posée directement par show() une fois la carte construite.
+		holder.addEventListener( 'lm-step-change', function ( e ) {
+			state.step = e.detail && e.detail.step;
+			if ( state.card ) {
+				state.card.classList.toggle( 'mpp-step-2', state.step === 2 );
+			}
+		} );
 
 		watchRealContent( holder, function () {
 			state.loaded = true;
@@ -118,6 +130,10 @@
 
 		var card = document.createElement( 'div' );
 		card.className = 'mpp-card';
+		state.card = card;
+		if ( state.step === 2 ) {
+			card.classList.add( 'mpp-step-2' ); // déjà passé à l'étape 2 pendant le préchargement
+		}
 
 		if ( config.imageUrl ) {
 			card.classList.add( 'has-image' );

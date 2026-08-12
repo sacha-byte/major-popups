@@ -66,21 +66,47 @@
 	background: #F7F6F3;
 	display: flex;
 	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 24px 20px;
+	gap: 10px;
+	overflow: hidden;
 }
 
 .mpp-image-col img {
+	/* Vignette encadrée plutôt que plein cadre : quelle que soit la largeur du
+	   popup (et donc de cette colonne), l'image garde ses proportions réelles
+	   (~210×297, format A4 portrait des couvertures de guide) sans jamais être
+	   recadrée — object-fit: contain + une largeur plafonnée, pas cover sur
+	   toute la hauteur de la carte. */
 	width: 100%;
-	flex: 1;
-	object-fit: cover;
+	max-width: 190px;
+	aspect-ratio: 210 / 297;
+	object-fit: contain;
+	border-radius: 6px;
+	box-shadow: 0 4px 14px rgba(21, 22, 26, .12);
 	display: block;
 }
 
 .mpp-image-caption {
-	padding: 10px 14px;
 	text-align: center;
 	font-size: 12.5px;
 	color: #8C887F;
 	font-family: system-ui, sans-serif;
+}
+
+/* Masquée à l'étape 2 du formulaire compact (questions selon le profil) :
+   l'image aide surtout à la première impression ; une fois engagé dans le
+   détail, mieux vaut laisser le formulaire respirer sur toute la largeur
+   plutôt que de garder une colonne dont la hauteur ne suit plus du tout celle
+   du formulaire (encarts conditionnels + listes de chips très variables selon
+   le statut). Signalé par formulaire.js via l'évènement `lm-step-change`. */
+.mpp-card.has-image.mpp-step-2 .mpp-image-col {
+	display: none;
+}
+.mpp-card.has-image .mpp-card-body {
+	flex: 1;
+	min-width: 0;
 }
 
 .mpp-loading {
