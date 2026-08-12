@@ -119,6 +119,27 @@
 		var card = document.createElement( 'div' );
 		card.className = 'mpp-card';
 
+		if ( config.imageUrl ) {
+			card.classList.add( 'has-image' );
+
+			var imageCol = document.createElement( 'div' );
+			imageCol.className = 'mpp-image-col';
+
+			var img = document.createElement( 'img' );
+			img.src = config.imageUrl;
+			img.alt = '';
+			imageCol.appendChild( img );
+
+			if ( config.imageCaption ) {
+				var caption = document.createElement( 'p' );
+				caption.className = 'mpp-image-caption';
+				caption.textContent = config.imageCaption;
+				imageCol.appendChild( caption );
+			}
+
+			card.appendChild( imageCol );
+		}
+
 		var closeBtn = document.createElement( 'button' );
 		closeBtn.className = 'mpp-close';
 		closeBtn.setAttribute( 'aria-label', 'Fermer' );
@@ -213,6 +234,9 @@
 					script.setAttribute( attr.name, attr.value );
 				} );
 				script.dataset.layout = 'compact';
+				// La coquille dessine la carte visible (fond/bordure/ombre) — l'embed
+				// ne doit jamais dessiner la sienne en double par-dessus.
+				script.dataset.card = 'flush';
 				script.textContent = node.textContent;
 				container.appendChild( script );
 			} else {

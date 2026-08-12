@@ -68,6 +68,27 @@ class MPP_ACF_Fields {
 					'instructions' => 'Lien direct du formulaire sur app.2empower.com — informatif, non utilisé pour l\'affichage.',
 				],
 				[
+					'key'   => 'field_mpp_tab_visuel',
+					'label' => 'Visuel',
+					'type'  => 'tab',
+				],
+				[
+					'key'          => 'field_mpp_image',
+					'name'         => 'image',
+					'label'        => 'Image (couverture du guide, etc.)',
+					'type'         => 'image',
+					'return_format' => 'url',
+					'preview_size' => 'medium',
+					'instructions' => 'Si renseignée, le popup s\'affiche en 2 colonnes (image à gauche, formulaire à droite). Laisser vide pour garder une seule colonne.',
+				],
+				[
+					'key'          => 'field_mpp_image_caption',
+					'name'         => 'image_caption',
+					'label'        => 'Légende sous l\'image',
+					'type'         => 'text',
+					'instructions' => 'Ex. "48 pages · PDF gratuit". Ignorée si pas d\'image.',
+				],
+				[
 					'key'   => 'field_mpp_tab_trigger',
 					'label' => 'Déclenchement',
 					'type'  => 'tab',

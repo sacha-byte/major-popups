@@ -51,6 +51,8 @@ class MPP_Render {
 				'cookieEnabled' => (bool) get_field( 'cookie_enabled', $popup_id ),
 				'cookieDays'    => (int) get_field( 'cookie_days', $popup_id ),
 				'cookieName'    => "mp_popup_{$popup_id}",
+				'imageUrl'      => get_field( 'image', $popup_id ) ?: null,
+				'imageCaption'  => get_field( 'image_caption', $popup_id ) ?: '',
 			];
 			?>
 			<template id="mpp-content-<?php echo (int) $popup_id; ?>"><?php echo get_field( 'embed_code', $popup_id ); // contenu admin de confiance, non échappé volontairement ?></template>

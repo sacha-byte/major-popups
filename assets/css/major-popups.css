@@ -1,11 +1,16 @@
-/* Coquille du popup : uniquement overlay + positionnement + bouton de fermeture.
- * Le formulaire Lead Manager embarqué a déjà sa propre carte (bordure, ombre, filet
- * d'accent) — la coquille ne doit PAS en dessiner une seconde par-dessus (constaté en
- * test réel le 2026-08-11 : effet "carte dans la carte", scroll imbriqué, croix mal
- * positionnée). `!important` sur le bouton de fermeture et le lien de fermeture : le
- * thème du site applique des styles globaux à tout <button>, y compris au survol
- * (constaté : fond rouge du thème sur le lien "Non merci") — même leçon que
- * major-master-v2/CONTEXT.md sur les couleurs de bouton fixées en dur côté thème.
+/* Coquille du popup : c'est ELLE qui dessine la carte visible (fond, bordure,
+ * ombre, filet d'accent) — le formulaire Lead Manager embarqué s'affiche "à plat"
+ * dedans (data-card="flush", cf. major-popups.js::appendEmbedContent + card-flush
+ * dans lead-manager/_formulaire_default_style.html). Avant cette version, la
+ * coquille était transparente et laissait l'embed dessiner sa propre carte : ça
+ * créait un effet "carte dans la carte" (double bordure/ombre) ET laissait tout
+ * élément propre à la coquille (bouton "Non merci", colonne image) flotter hors de
+ * toute limite visuelle, puisque rien ne délimitait la carte pour eux — corrigé le
+ * 2026-08-12 en même temps que l'ajout de la colonne image optionnelle.
+ * `!important` sur le bouton/lien de fermeture : le thème du site applique des
+ * styles globaux à tout <button>, y compris au survol (constaté : fond rouge du
+ * thème sur le lien "Non merci") — même leçon que major-master-v2/CONTEXT.md sur
+ * les couleurs de bouton fixées en dur côté thème.
  */
 
 .mpp-overlay {
@@ -32,6 +37,50 @@
 	   plus étroit forcerait le formulaire à se resserrer plus qu'il n'a besoin. */
 	max-width: 640px;
 	margin: auto; /* centre verticalement même quand l'overlay scrolle */
+	background: #fff;
+	border-radius: 16px;
+	box-shadow: 0 20px 60px rgba(21, 22, 26, .25);
+	overflow: hidden; /* rogne les coins arrondis (image, filet d'accent) */
+}
+
+.mpp-card::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 4px;
+	background: #1B3B8F;
+	z-index: 1;
+}
+
+.mpp-card.has-image {
+	display: flex;
+	align-items: stretch;
+	max-width: 760px; /* colonne image en plus des 640px du formulaire */
+}
+
+.mpp-image-col {
+	width: 38%;
+	flex-shrink: 0;
+	background: #F7F6F3;
+	display: flex;
+	flex-direction: column;
+}
+
+.mpp-image-col img {
+	width: 100%;
+	flex: 1;
+	object-fit: cover;
+	display: block;
+}
+
+.mpp-image-caption {
+	padding: 10px 14px;
+	text-align: center;
+	font-size: 12.5px;
+	color: #8C887F;
+	font-family: system-ui, sans-serif;
 }
 
 .mpp-loading {
@@ -62,7 +111,7 @@
 	position: absolute;
 	top: 10px;
 	right: 10px;
-	z-index: 1;
+	z-index: 2; /* au-dessus du filet d'accent (.mpp-card::before, z-index: 1) */
 	width: 32px;
 	height: 32px;
 	display: flex;
@@ -115,5 +164,15 @@
 	.mpp-card {
 		max-width: none;
 		margin: 0;
+	}
+
+	.mpp-card.has-image {
+		max-width: none;
+	}
+
+	/* Pas de place pour une colonne décorative sur mobile — priorité au formulaire,
+	   pas de hauteur supplémentaire ajoutée par l'image. */
+	.mpp-image-col {
+		display: none;
 	}
 }
