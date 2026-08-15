@@ -4,13 +4,14 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 /**
  * Évalue si un `mp_popup` doit s'afficher sur la requête courante.
  *
- * `targeting_mode` : `all` (tout le site) ou `filters` (`targeting_conditions`, une
- * liste PLATE de filtres, chacun portant un connecteur ET/OU relatif à la ligne
- * précédente — pas de repeater imbriqué, simplifié le 2026-08-15 suite à un retour
- * utilisateur sur la confusion de l'UI à groupes/filtres imbriqués). On reconstruit
- * en interne des groupes (ET) séparés par un connecteur OU : le popup matche si AU
- * MOINS UN groupe matche entièrement — même logique qu'avant, présentation admin
- * différente.
+ * `targeting_mode` : `all` (tout le site) ou `filters` (`targeting_groups`, un
+ * repeater imbriqué groupes → filtres, cf. class-acf-fields.php). Le popup matche
+ * si AU MOINS UN groupe matche entièrement (OU entre groupes) ; un groupe matche
+ * si TOUS ses filtres matchent (ET entre filtres du même groupe) — présentation
+ * hiérarchique choisie le 2026-08-15 pour rendre visible d'un coup d'œil quels
+ * filtres sont dans le même groupe ET, par rapport aux autres groupes en OU
+ * (retour utilisateur : une liste plate + connecteur par ligne restait ambiguë
+ * dès 3 filtres ou plus).
  */
 class MPP_Targeting {
 
@@ -21,9 +22,9 @@ class MPP_Targeting {
 			return true; // couvre aussi la page d'accueil, les archives, etc.
 		}
 
-		$groups = self::conditions_to_groups( (array) get_field( 'targeting_conditions', $popup_id ) );
+		$groups = (array) get_field( 'targeting_groups', $popup_id );
 		if ( empty( $groups ) ) {
-			return false; // mode "filters" sans aucun filtre configuré = ne matche rien, pas tout
+			return false; // mode "filters" sans aucun groupe configuré = ne matche rien, pas tout
 		}
 
 		if ( is_admin() ) {
@@ -31,7 +32,7 @@ class MPP_Targeting {
 		}
 
 		foreach ( $groups as $group ) {
-			if ( self::group_matches( $group ) ) {
+			if ( self::group_matches( (array) ( $group['filters'] ?? [] ) ) ) {
 				return true;
 			}
 		}
@@ -39,33 +40,11 @@ class MPP_Targeting {
 		return false;
 	}
 
-	/**
-	 * Reconstruit des groupes (ET) à partir de la liste plate + connecteur : un
-	 * connecteur "or" démarre un nouveau groupe, "and" (ou 1ère ligne) rejoint le
-	 * groupe courant.
-	 */
-	private static function conditions_to_groups( array $conditions ): array {
-		$groups = [];
-		$current = [];
-
-		foreach ( $conditions as $i => $condition ) {
-			$connector = $condition['connector'] ?? 'and';
-			if ( $i > 0 && $connector === 'or' ) {
-				$groups[] = $current;
-				$current  = [];
-			}
-			$current[] = $condition;
-		}
-
-		if ( ! empty( $current ) ) {
-			$groups[] = $current;
-		}
-
-		return $groups;
-	}
-
-	/** Un groupe matche si tous ses filtres matchent (ET). */
+	/** Un groupe matche si tous ses filtres matchent (ET). Groupe vide = ne matche jamais. */
 	private static function group_matches( array $filters ): bool {
+		if ( empty( $filters ) ) {
+			return false;
+		}
 		foreach ( $filters as $filter ) {
 			if ( ! self::filter_matches( (array) $filter ) ) {
 				return false;
@@ -119,13 +98,16 @@ class MPP_Targeting {
 			return 'Tout le site';
 		}
 
-		$conditions = (array) get_field( 'targeting_conditions', $popup_id );
-		if ( empty( $conditions ) ) {
+		$groups = (array) get_field( 'targeting_groups', $popup_id );
+		if ( empty( $groups ) ) {
 			return '—';
 		}
 
-		$groups = self::conditions_to_groups( $conditions );
+		$filter_count = 0;
+		foreach ( $groups as $group ) {
+			$filter_count += count( (array) ( $group['filters'] ?? [] ) );
+		}
 
-		return sprintf( '%d filtre(s), %d groupe(s)', count( $conditions ), count( $groups ) );
+		return sprintf( '%d groupe(s), %d filtre(s)', count( $groups ), $filter_count );
 	}
 }
