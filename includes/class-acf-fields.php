@@ -29,9 +29,8 @@ class MPP_ACF_Fields {
 			return;
 		}
 
-		// Un champ "Termes" par taxonomie, imbriqué dans le repeater de filtres (voir
-		// field_mpp_group_filters ci-dessous) — même mécanique de conditional_logic
-		// scopée au sein d'une ligne de repeater qu'auparavant au niveau racine.
+		// Un champ "Termes" par taxonomie, sous-champ du repeater targeting_conditions
+		// (voir plus bas) — conditional_logic scopée au sein d'une ligne de repeater.
 		$filter_taxonomy_term_fields = [];
 		foreach ( self::TAXONOMIES as $taxonomy => $label ) {
 			$filter_taxonomy_term_fields[] = [
@@ -166,71 +165,72 @@ class MPP_ACF_Fields {
 					'default_value' => 'all',
 				],
 				[
-					'key'               => 'field_mpp_targeting_groups',
-					'name'              => 'targeting_groups',
-					'label'             => 'Groupes de filtres',
+					'key'               => 'field_mpp_targeting_conditions',
+					'name'              => 'targeting_conditions',
+					'label'             => 'Filtres',
 					'type'              => 'repeater',
-					'instructions'      => 'Le popup s\'affiche si AU MOINS UN groupe correspond entièrement (OU entre groupes). Dans un groupe, TOUS les filtres doivent correspondre (ET entre filtres du même groupe).',
-					'button_label'      => 'Ajouter un groupe (OU)',
+					'instructions'      => 'Le popup s\'affiche si cette liste de filtres, combinés selon ET/OU, correspond à la page courante. "ET" restreint (les deux filtres doivent être vrais), "OU" élargit (au moins un des deux suffit). Le connecteur de la 1ère ligne est ignoré (rien avant elle à combiner).',
+					'button_label'      => 'Ajouter un filtre',
 					'layout'            => 'block',
 					'conditional_logic' => [ [ [ 'field' => 'field_mpp_targeting_mode', 'operator' => '==', 'value' => 'filters' ] ] ],
-					'sub_fields'        => [
+					'sub_fields'        => array_merge( [
 						[
-							'key'          => 'field_mpp_group_filters',
-							'name'         => 'filters',
-							'label'        => 'Filtres du groupe (ET)',
-							'type'         => 'repeater',
-							'button_label' => 'Ajouter un filtre (ET)',
-							'layout'       => 'block',
-							'sub_fields'   => array_merge( [
-								[
-									'key'           => 'field_mpp_filter_type',
-									'name'          => 'filter_type',
-									'label'         => 'Type de filtre',
-									'type'          => 'select',
-									'choices'       => [
-										'post_type'      => 'Type de contenu',
-										'specific_posts' => 'Contenus spécifiques',
-										'taxonomy_term'  => 'Terme de taxonomie',
-										'front_page'     => 'Page d\'accueil',
-									],
-									'default_value' => 'post_type',
-								],
-								[
-									'key'               => 'field_mpp_filter_post_types',
-									'name'              => 'filter_post_types',
-									'label'             => 'Type(s) de contenu',
-									'type'              => 'checkbox',
-									'choices'           => [
-										'post'       => 'Articles',
-										'page'       => 'Pages',
-										'academique' => 'Académique',
-										'master'     => 'Master',
-										'prepa'      => 'Prépa',
-									],
-									'conditional_logic' => [ [ [ 'field' => 'field_mpp_filter_type', 'operator' => '==', 'value' => 'post_type' ] ] ],
-								],
-								[
-									'key'               => 'field_mpp_filter_posts',
-									'name'              => 'filter_posts',
-									'label'             => 'Contenus spécifiques',
-									'type'              => 'relationship',
-									'post_type'         => [ 'post', 'page', 'academique', 'master', 'prepa' ],
-									'filters'           => [ 'search' ],
-									'return_format'     => 'id',
-									'conditional_logic' => [ [ [ 'field' => 'field_mpp_filter_type', 'operator' => '==', 'value' => 'specific_posts' ] ] ],
-								],
-								[
-									'key'               => 'field_mpp_filter_taxonomy',
-									'name'              => 'filter_taxonomy',
-									'label'             => 'Taxonomie',
-									'type'              => 'select',
-									'choices'           => self::TAXONOMIES,
-									'conditional_logic' => [ [ [ 'field' => 'field_mpp_filter_type', 'operator' => '==', 'value' => 'taxonomy_term' ] ] ],
-								],
-							], $filter_taxonomy_term_fields ),
+							'key'           => 'field_mpp_condition_connector',
+							'name'          => 'connector',
+							'label'         => 'Combiner avec la ligne précédente',
+							'type'          => 'button_group',
+							'choices'       => [
+								'and' => 'ET — restreint',
+								'or'  => 'OU — élargit',
+							],
+							'default_value' => 'and',
 						],
-					],
+						[
+							'key'           => 'field_mpp_filter_type',
+							'name'          => 'filter_type',
+							'label'         => 'Type de filtre',
+							'type'          => 'select',
+							'choices'       => [
+								'post_type'      => 'Type de contenu',
+								'specific_posts' => 'Contenus spécifiques',
+								'taxonomy_term'  => 'Terme de taxonomie',
+								'front_page'     => 'Page d\'accueil',
+							],
+							'default_value' => 'post_type',
+						],
+						[
+							'key'               => 'field_mpp_filter_post_types',
+							'name'              => 'filter_post_types',
+							'label'             => 'Type(s) de contenu',
+							'type'              => 'checkbox',
+							'choices'           => [
+								'post'       => 'Articles',
+								'page'       => 'Pages',
+								'academique' => 'Académique',
+								'master'     => 'Master',
+								'prepa'      => 'Prépa',
+							],
+							'conditional_logic' => [ [ [ 'field' => 'field_mpp_filter_type', 'operator' => '==', 'value' => 'post_type' ] ] ],
+						],
+						[
+							'key'               => 'field_mpp_filter_posts',
+							'name'              => 'filter_posts',
+							'label'             => 'Contenus spécifiques',
+							'type'              => 'relationship',
+							'post_type'         => [ 'post', 'page', 'academique', 'master', 'prepa' ],
+							'filters'           => [ 'search' ],
+							'return_format'     => 'id',
+							'conditional_logic' => [ [ [ 'field' => 'field_mpp_filter_type', 'operator' => '==', 'value' => 'specific_posts' ] ] ],
+						],
+						[
+							'key'               => 'field_mpp_filter_taxonomy',
+							'name'              => 'filter_taxonomy',
+							'label'             => 'Taxonomie',
+							'type'              => 'select',
+							'choices'           => self::TAXONOMIES,
+							'conditional_logic' => [ [ [ 'field' => 'field_mpp_filter_type', 'operator' => '==', 'value' => 'taxonomy_term' ] ] ],
+						],
+					], $filter_taxonomy_term_fields ),
 				],
 			],
 			'location' => [
