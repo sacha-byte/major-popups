@@ -56,12 +56,63 @@ class MPP_ACF_Fields {
 			'title'    => 'Configuration du popup',
 			'fields'   => [
 				[
+					'key'           => 'field_mpp_content_type',
+					'name'          => 'content_type',
+					'label'         => 'Type de contenu',
+					'type'          => 'radio',
+					'layout'        => 'horizontal',
+					'choices'       => [
+						'form'   => 'Formulaire Lead Manager',
+						'visual' => 'Visuel cliquable (image + lien, sans formulaire)',
+					],
+					// Les popups créés avant l'ajout de ce champ n'ont pas de valeur en base :
+					// MPP_Render les traite comme 'form' (comportement historique).
+					'default_value' => 'form',
+				],
+				[
+					'key'               => 'field_mpp_visual_image',
+					'name'              => 'visual_image',
+					'label'             => 'Visuel',
+					'type'              => 'image',
+					'return_format'     => 'id',
+					'preview_size'      => 'medium',
+					'required'          => 1,
+					'instructions'      => 'Format conseillé : portrait 4:5, ex. 1200×1500 px (visuel type post LinkedIn). L\'image entière est cliquable.',
+					'conditional_logic' => [ [ [ 'field' => 'field_mpp_content_type', 'operator' => '==', 'value' => 'visual' ] ] ],
+				],
+				[
+					'key'               => 'field_mpp_visual_link',
+					'name'              => 'visual_link',
+					'label'             => 'Lien au clic',
+					'type'              => 'url',
+					'required'          => 1,
+					'conditional_logic' => [ [ [ 'field' => 'field_mpp_content_type', 'operator' => '==', 'value' => 'visual' ] ] ],
+				],
+				[
+					'key'               => 'field_mpp_visual_new_tab',
+					'name'              => 'visual_new_tab',
+					'label'             => 'Ouvrir le lien dans un nouvel onglet',
+					'type'              => 'true_false',
+					'ui'                => 1,
+					'default_value'     => 1,
+					'conditional_logic' => [ [ [ 'field' => 'field_mpp_content_type', 'operator' => '==', 'value' => 'visual' ] ] ],
+				],
+				[
+					'key'               => 'field_mpp_visual_alt',
+					'name'              => 'visual_alt',
+					'label'             => 'Texte alternatif du visuel',
+					'type'              => 'text',
+					'instructions'      => 'Lu par les lecteurs d\'écran à la place de l\'image, ex. "Le Grand Salon des Grandes Écoles de Commerce, 6-8 novembre 2026, Carreau du Temple — s\'inscrire". Si vide : texte alternatif de la médiathèque.',
+					'conditional_logic' => [ [ [ 'field' => 'field_mpp_content_type', 'operator' => '==', 'value' => 'visual' ] ] ],
+				],
+				[
 					'key'         => 'field_mpp_embed_code',
 					'name'        => 'embed_code',
 					'label'       => 'Code d\'embed Lead Manager',
 					'type'        => 'textarea',
 					'rows'        => 3,
 					'instructions' => 'Coller le code fourni par Lead Manager pour ce formulaire (slug se terminant en "-popup"), ex. <script src="https://app.2empower.com/static/embed-formulaire.js" data-slug="..."></script>',
+					'conditional_logic' => [ [ [ 'field' => 'field_mpp_content_type', 'operator' => '!=', 'value' => 'visual' ] ] ],
 				],
 				[
 					'key'   => 'field_mpp_lien_direct',
@@ -69,10 +120,12 @@ class MPP_ACF_Fields {
 					'label' => 'Lien direct (référence)',
 					'type'  => 'url',
 					'instructions' => 'Lien direct du formulaire sur app.2empower.com — informatif, non utilisé pour l\'affichage.',
+					'conditional_logic' => [ [ [ 'field' => 'field_mpp_content_type', 'operator' => '!=', 'value' => 'visual' ] ] ],
 				],
 				[
 					'key'   => 'field_mpp_tab_visuel',
-					'label' => 'Visuel',
+					'conditional_logic' => [ [ [ 'field' => 'field_mpp_content_type', 'operator' => '!=', 'value' => 'visual' ] ] ],
+					'label' => 'Image à côté du formulaire',
 					'type'  => 'tab',
 				],
 				[
@@ -83,6 +136,7 @@ class MPP_ACF_Fields {
 					'return_format' => 'url',
 					'preview_size' => 'medium',
 					'instructions' => 'Si renseignée, le popup s\'affiche en 2 colonnes (image à gauche, formulaire à droite). Laisser vide pour garder une seule colonne.',
+					'conditional_logic' => [ [ [ 'field' => 'field_mpp_content_type', 'operator' => '!=', 'value' => 'visual' ] ] ],
 				],
 				[
 					'key'          => 'field_mpp_image_caption',
@@ -90,6 +144,7 @@ class MPP_ACF_Fields {
 					'label'        => 'Légende sous l\'image',
 					'type'         => 'text',
 					'instructions' => 'Ex. "48 pages · PDF gratuit". Ignorée si pas d\'image.',
+					'conditional_logic' => [ [ [ 'field' => 'field_mpp_content_type', 'operator' => '!=', 'value' => 'visual' ] ] ],
 				],
 				[
 					'key'   => 'field_mpp_tab_trigger',

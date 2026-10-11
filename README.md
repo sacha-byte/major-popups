@@ -27,7 +27,8 @@ assets/
 ## Modèle de données (CPT `mp_popup`)
 
 - **Actif/inactif** : statut natif WP (`publish` = actif, `draft` = inactif).
-- `embed_code` : code d'embed Lead Manager (HTML/`<script>` brut, non échappé au rendu — contenu admin de confiance).
+- `content_type` (`form` | `visual`) : formulaire Lead Manager (défaut, et valeur implicite des popups créés avant ce champ) ou **visuel cliquable sans formulaire** — `visual_image` (médiathèque, portrait 4:5 conseillé, ex. 1200×1500), `visual_link`, `visual_new_tab`, `visual_alt`. Même coquille (croix, « Non merci », Échap, cookie, ciblage, déclenchement) ; un clic sur le visuel pose le cookie comme une fermeture.
+- `embed_code` (type `form`) : code d'embed Lead Manager (HTML/`<script>` brut, non échappé au rendu — contenu admin de confiance).
 - `trigger_type` (`delay` | `scroll`) + `trigger_delay_seconds` / `trigger_scroll_percent`.
 - `cookie_enabled` + `cookie_days`.
 - `targeting_mode` (`all` | `post_types` | `specific_posts` | `taxonomy_terms`) + champs associés.

@@ -109,6 +109,43 @@
 	min-width: 0;
 }
 
+/* Popup "visuel cliquable" (image + lien, sans formulaire). La largeur suit le
+   ratio réel de l'image (--mpp-ratio = largeur / hauteur, posé par le JS) : un
+   visuel portrait 4:5 fait 440px de large au maximum, et rétrécit si l'écran
+   n'est pas assez haut pour l'afficher en entier avec le lien "Non merci"
+   (~110px) — jamais d'image coupée, jamais de scroll pour voir le bas du visuel.
+   Pas de filet d'accent : le visuel porte déjà sa propre identité graphique. */
+.mpp-card.is-visual {
+	max-width: min(440px, calc((100vh - 110px) * var(--mpp-ratio, .8)));
+	max-width: min(440px, calc((100dvh - 110px) * var(--mpp-ratio, .8)));
+}
+
+.mpp-card.is-visual::before {
+	display: none;
+}
+
+.mpp-visual-link {
+	display: block;
+	line-height: 0;
+}
+
+.mpp-visual-link:focus-visible {
+	outline: 3px solid #1B3B8F;
+	outline-offset: -3px;
+}
+
+.mpp-visual {
+	display: block;
+	width: 100%;
+	height: auto;
+	aspect-ratio: var(--mpp-ratio, .8);
+	object-fit: cover;
+}
+
+.mpp-card.is-visual .mpp-dismiss {
+	margin: 10px auto 12px;
+}
+
 .mpp-loading {
 	padding: 60px 24px;
 	text-align: center;
@@ -194,6 +231,15 @@
 
 	.mpp-card.has-image {
 		max-width: none;
+	}
+
+	/* Bottom sheet aussi pour le visuel, mais plafonné par la hauteur d'écran :
+	   sur un téléphone peu haut, la carte se resserre (centrée) plutôt que de
+	   rogner le visuel. */
+	.mpp-card.is-visual {
+		max-width: min(100%, calc((100vh - 90px) * var(--mpp-ratio, .8)));
+		max-width: min(100%, calc((100dvh - 90px) * var(--mpp-ratio, .8)));
+		margin: 0 auto;
 	}
 
 	/* Pas de place pour une colonne décorative sur mobile — priorité au formulaire,

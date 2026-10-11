@@ -1,6 +1,7 @@
 /**
  * Major Popups — un seul popup affiché par page, le premier dont la condition
- * (délai ou scroll) se déclenche. Contenu = code d'embed Lead Manager, injecté
+ * (délai ou scroll) se déclenche. Deux types de contenu : un visuel cliquable
+ * (image + lien, cf. buildVisual) ou le code d'embed Lead Manager, injecté
  * dynamiquement (document.createElement) pour qu'un éventuel <script> s'exécute
  * réellement — une insertion via innerHTML ne l'exécuterait pas.
  *
@@ -69,6 +70,11 @@
 	 * lieu d'en créer un nouveau, pour une ouverture instantanée le cas échéant.
 	 */
 	function preload( config ) {
+		if ( config.contentType === 'visual' ) {
+			preloadVisual( config );
+			return;
+		}
+
 		var template = document.getElementById( 'mpp-content-' + config.id );
 		if ( ! template ) {
 			return;
@@ -110,6 +116,59 @@
 		} );
 	}
 
+	/**
+	 * Popup visuel : on télécharge l'image pendant le temps mort avant déclenchement
+	 * (même logique que le préchargement du formulaire), pour qu'elle soit déjà en
+	 * cache au moment où le popup s'ouvre.
+	 */
+	function preloadVisual( config ) {
+		var img = new Image();
+		if ( config.visualSrcset ) {
+			img.sizes = VISUAL_SIZES;
+			img.srcset = config.visualSrcset;
+		}
+		img.src = config.visualSrc;
+		preloaded[ config.id ] = { visual: true };
+	}
+
+	// Largeur affichée du visuel : 440px max (cf. .mpp-card.is-visual), pleine largeur sur mobile.
+	var VISUAL_SIZES = '(max-width: 640px) 100vw, 440px';
+
+	function buildVisual( config, card ) {
+		card.classList.add( 'is-visual' );
+		card.style.setProperty( '--mpp-ratio', config.visualRatio || 0.8 );
+
+		var body = document.createElement( 'div' );
+		body.className = 'mpp-card-body';
+
+		var link = document.createElement( 'a' );
+		link.className = 'mpp-visual-link';
+		link.href = config.linkUrl;
+		if ( config.linkNewTab ) {
+			link.target = '_blank';
+			link.rel = 'noopener';
+		}
+
+		var img = document.createElement( 'img' );
+		img.className = 'mpp-visual';
+		if ( config.visualSrcset ) {
+			img.sizes = VISUAL_SIZES;
+			img.srcset = config.visualSrcset;
+		}
+		img.src = config.visualSrc;
+		img.alt = config.visualAlt || '';
+		link.appendChild( img );
+
+		// Clic sur le visuel = intérêt exprimé : on pose le cookie comme pour une
+		// fermeture, pour ne pas reproposer le même popup à son retour sur le site.
+		link.addEventListener( 'click', function () {
+			close( config );
+		} );
+
+		body.appendChild( link );
+		return body;
+	}
+
 	function show( config ) {
 		if ( shown ) {
 			return; // un popup déjà affiché sur cette page vue
@@ -135,7 +194,7 @@
 			card.classList.add( 'mpp-step-2' ); // déjà passé à l'étape 2 pendant le préchargement
 		}
 
-		if ( config.imageUrl ) {
+		if ( config.contentType !== 'visual' && config.imageUrl ) {
 			card.classList.add( 'has-image' );
 
 			var imageCol = document.createElement( 'div' );
@@ -164,13 +223,18 @@
 			close( config );
 		} );
 
-		var body = state.holder;
-		body.style.position = '';
-		body.style.left = '';
-		body.style.top = '';
-		body.className = 'mpp-card-body';
+		var body;
+		if ( config.contentType === 'visual' ) {
+			body = buildVisual( config, card );
+		} else {
+			body = state.holder;
+			body.style.position = '';
+			body.style.left = '';
+			body.style.top = '';
+			body.className = 'mpp-card-body';
+		}
 
-		if ( ! state.loaded ) {
+		if ( ! state.visual && ! state.loaded ) {
 			// Filet de sécurité : le préchargement n'a pas eu le temps de finir avant
 			// le déclenchement (délai/scroll trop court) — on abandonne l'indicateur
 			// au bout de 8s à partir de l'AFFICHAGE (pas de l'armement, qui peut être
