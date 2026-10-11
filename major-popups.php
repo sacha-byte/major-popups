@@ -20,6 +20,7 @@ require_once MPP_PATH . 'includes/class-render.php';
 require_once MPP_PATH . 'includes/class-assets.php';
 require_once MPP_PATH . 'includes/class-cache-compat.php';
 require_once MPP_PATH . 'includes/class-migration.php';
+require_once MPP_PATH . 'includes/class-rest-api.php';
 
 MPP_CPT::init();
 MPP_ACF_Fields::init();
@@ -27,3 +28,4 @@ MPP_Render::init();
 MPP_Assets::init();
 MPP_Cache_Compat::init();
 MPP_Migration::init();
+MPP_Rest_Api::init();
